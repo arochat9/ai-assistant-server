@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: ai-assistant-server
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: false
+      - key: ENABLE_APM
+        value: true
+      - key: APM_SERVICE_NAME
+        value: ai-assistant-server-prod
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ai-assistant-db
+          property: connectionString
+
+databases:
+  - name: ai-assistant-db
+    databaseName: ai_assistant
+    user: ai_assistant_user

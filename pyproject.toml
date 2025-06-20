@@ -1,0 +1,9 @@
+[tool.ruff]
+line-length = 88
+select = ["E", "W", "F", "I"]
+
+[tool.ruff.isort]
+known-first-party = ["app"]
+
+[tool.pyright]
+typeCheckingMode = "basic"
