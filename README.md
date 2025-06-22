@@ -36,12 +36,14 @@ A FastAPI server that receives text messages, stores them in a database, and tri
 ## Installation & Setup
 
 ### 1. Clone the repository
+
 ```bash
 git clone <repo-url>
 cd ai-assistant-server
 ```
 
 ### 2. Create and activate virtual environment
+
 ```bash
 python3 -m venv venv
 source venv/bin/activate  # Mac/Linux
@@ -50,11 +52,13 @@ venv\Scripts\activate     # Windows
 ```
 
 ### 3. Install dependencies
+
 ```bash
 pip install -r requirements.txt
 ```
 
 ### 4. Set up your IDE
+
 - **VS Code/Windsurf**: `Cmd+Shift+P` → "Python: Select Interpreter" → Choose `./venv/bin/python3`
 
 ## Configuration
@@ -68,23 +72,26 @@ Key environment variables:
 ### Local Development
 
 1. **Configure environment**
+
    ```bash
    cp .env.example .env
    # Edit .env with your database URL and other settings
    ```
 
 2. **Run the server**
+
    ```bash
    python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
    ```
 
 3. **Test the API**
+
    ```bash
    # Send a message
    curl -X POST "http://localhost:8000/api/v1/messages/" \
         -H "Content-Type: application/json" \
         -d '{"text": "I need to buy groceries tomorrow"}'
-   
+
    # Check todos (after 60 seconds)
    curl "http://localhost:8000/api/v1/todos/"
    ```
@@ -99,6 +106,7 @@ Key environment variables:
 ## API Endpoints
 
 ### Messages
+
 - `POST /api/v1/messages/` - Create a new message
 - `GET /api/v1/messages/` - List messages with filtering
 - `GET /api/v1/messages/{id}` - Get specific message
@@ -106,6 +114,7 @@ Key environment variables:
 - `DELETE /api/v1/messages/{id}` - Delete message
 
 ### Todos
+
 - `POST /api/v1/todos/` - Create a new todo
 - `GET /api/v1/todos/` - List todos with filtering
 - `GET /api/v1/todos/{id}` - Get specific todo
@@ -115,6 +124,7 @@ Key environment variables:
 - `POST /api/v1/todos/{id}/reopen` - Reopen completed todo
 
 ### Health & Monitoring
+
 - `GET /health` - Health check endpoint
 - Structured logging with request tracing
 - Prometheus metrics available
@@ -185,19 +195,20 @@ app/
 
 [Your License Here]
 
------------------
+---
 
 # NON LLM CONTENT BELOW - DO NOT ADD OR DELETE OR EDIT BELOW
 
 On project start
 
+- install ruff (if new computer) section below
 - add .env variables (if new computer)
 - create venv (if not started yet. Should see something like (venv) arochat@arochat14-mac ai-assistant-server %)
   - check python3 --version to make sure you have 3.13.xxx (if not use chatgpt to get it)
   - create the venv if it doesn't exist: python3 -m venv venv
   - OR cmd shift p -> python: create environment -> 3.13
   - activate it: source venv/bin/activate
-- OLD: pip install -r requirements.txt
+- run: pip install -r requirements.txt for linter to see packages
   - new: docker compose up --build
     - this will start by running any migrations btw
     - its rebuilding the docker image and starting the container
@@ -213,6 +224,22 @@ Updating requirements
 - OLD: pip install -r requirements.txt
   - new: docker compose up --build
   - (without rebuilding deps): docker compose up
+
+Ruff
+
+- a good python linter that can be configured to fix things on autosave
+- install extension
+- go into workspace settings.json and add this key to the dict:
+- ```json
+  "[python]": {
+      "editor.formatOnSave": true,
+      "editor.codeActionsOnSave": {
+        "source.fixAll": "explicit",
+        "source.organizeImports": "explicit"
+      },
+      "editor.defaultFormatter": "charliermarsh.ruff"
+    }
+  ```
 
 Alembic
 
@@ -234,7 +261,7 @@ project layout
 - api schemas for input output schemas of endpoints
 - core
   - not sure what config or database is doing
-  - middleware is catching http requests and logging shit 
+  - middleware is catching http requests and logging shit
 - models is sqlalchemy (orm) defining DB schemas
 - services will be where agent logic lives, right now its mostly nonsense
   - debounce service is what was copied from original plan
@@ -250,17 +277,21 @@ TODO
 - test create message endpoint with curl
 - deploy to github
 - get working on render
-- get alembic to work in render or wherever I deploy.  the migration needs to work with the prod db
+- get alembic to work in render or wherever I deploy. the migration needs to work with the prod db
 - Connect neon database (go back to original chat for this)
-  - ideally use sqlalchemy.  Also want to figure out writing to dev branch in neon vs prod branch when running locally
+  - ideally use sqlalchemy. Also want to figure out writing to dev branch in neon vs prod branch when running locally
 - make sure agent logging is capturing everything (another table for this)
 - For logging in middleware, figure out what prometheus is doing... looks a bit sketchy
-  - honestly need to figure out how logging everywhere works, right now its pretty confusing.  theres a lot of logging words in main.py
+  - honestly need to figure out how logging everywhere works, right now its pretty confusing. theres a lot of logging words in main.py
 - eventually need to create background task thats connected to render cron job
 - setup API KEY and HTTPS for proper authentication with client
 - understand how testing works... do people normally test with a developmentDB? but then whats to stop the developmentDB from getting all out of wack?
   - I want to use my development db for integration tests but then every time I add a new row my integration tests will "break" theoretically... so maybe I need
   - a base state for my development db? idek
   - according to neon I can have up to 10 branches so maybe I have a dev branch and a test branch
-- look into why I have to create these weird global services in main.py.  Why do I need to instantiate these classes
+- look into why I have to create these weird global services in main.py. Why do I need to instantiate these classes
 - figure out how to setup ruff and language server stuff on a new machine and add to readme setup
+
+```
+
+```
