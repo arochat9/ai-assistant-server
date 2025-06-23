@@ -37,7 +37,8 @@ class Message(Base):
     user_id = Column(
         String, ForeignKey("users.user_id"), nullable=False
     )  # Sender ID (phone/email)
-    user_info_struct = Column(JSON, nullable=True)  # Denormalized sender info
+    sender_name = Column(String, nullable=True)  # Sender name
+    chat_members_struct = Column(JSON, nullable=True)  # Denormalized sender info
     chat_id = Column(String, ForeignKey("chats.chat_id"), nullable=False)  # Chat ID
     is_spam = Column(Boolean, default=False, nullable=False)  # Spam flag
     replied_to_fk = Column(

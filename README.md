@@ -243,11 +243,12 @@ Ruff
 
 Alembic
 
-- setup using: alembic init -t async alembic
-- revision based on models using: alembic revision --autogenerate -m "initial migration"
+- setup using: alembic init -t async alembic ONE TIME THING
+- revision based on models using: alembic revision --autogenerate -m "migration message"
 - run by just running docker container
   - docker compose up
   - to rebuild dependencies: docker compose up --build
+- can also run by doing alembic upgrade head
 
 Docker
 
@@ -272,6 +273,13 @@ project layout
 
 TODO
 
+- fix the columns in the neon table that look like:
+  - chat_id_chat_users_chat_id
+- the endpoint is working but need to validate that its working
+  - message in new chat (direct and group)
+  - message in existing chat but new chat names
+  - message with new users
+  - message with existing users but new names
 - I need to make the messages endpoint add to chat and user, and not just the messages table, which is what is currently happening
   - look through schema and make sure all types are correct and such
 - test create message endpoint with curl
