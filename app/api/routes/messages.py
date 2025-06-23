@@ -5,7 +5,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api_schemas.message import MessageCreate, MessageResponse
 from app.core.database import get_db
-from app.models import Message
+from app.models import Chat, Message, User
+from app.models.chat import ChatType
 from app.models.message import MessageStatus
 from app.services.debounce_service import DebounceService
 
@@ -27,19 +28,44 @@ async def create_message(
         # Calculate character count
         text_character_count = len(message_data.text_content)
 
+        # Extract sender_name and user_id from chat_members_struct
+        sender_name = None
+        user_id = None
+        for member in message_data.chat_members_struct:
+            if member.is_sender:
+                sender_name = member.name
+                user_id = member.user_id
+                break
+
+        # Ensure users exist or create them, and update name if changed
+        users = await get_or_create_users(db, message_data.chat_members_struct)
+        chat_type = ChatType.GROUP if len(users) > 2 else ChatType.PRIVATE
+        await get_or_create_chat(
+            db,
+            message_data.chat_id,
+            message_data.chat_display_name,
+            chat_type,
+            users,
+        )
+
+        # Convert ChatMember models to dicts for JSON storage
+        chat_members_struct = [
+            member.model_dump() for member in message_data.chat_members_struct
+        ]
+
         # Create message in database
         message = Message(
             message_id=message_data.message_id,
             text_content=message_data.text_content,
             text_character_count=text_character_count,
             status=MessageStatus.UNPROCESSED,
-            user_id=message_data.user_id,
+            user_id=user_id,
             chat_id=message_data.chat_id,
-            user_info_struct=message_data.user_info_struct,
+            chat_members_struct=chat_members_struct,
+            sender_name=sender_name,
             is_spam=message_data.is_spam or False,
             replied_to_fk=message_data.replied_to_fk,
         )
-
         db.add(message)
         await db.commit()
         await db.refresh(message)
@@ -76,3 +102,43 @@ async def create_message(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to create message: {error_msg}",
         )
+
+
+async def get_or_create_users(db: AsyncSession, chat_members_struct):
+    user_ids = [member.user_id for member in chat_members_struct]
+    users = {}
+    for member in chat_members_struct:
+        user = await db.get(User, member.user_id)
+        if not user:
+            user = User(user_id=member.user_id, name=member.name)
+            db.add(user)
+            await db.flush()
+        else:
+            if user.name != member.name:
+                user.name = member.name
+                db.add(user)
+        users[member.user_id] = user
+    return users
+
+
+async def get_or_create_chat(
+    db: AsyncSession, chat_id, chat_display_name, chat_type, users
+):
+    chat = await db.get(Chat, chat_id)
+    if not chat:
+        chat = Chat(
+            chat_id=chat_id,
+            chat_display_name=chat_display_name,
+            chat_type=chat_type,
+            users=list(users.values()),
+        )
+        db.add(chat)
+        await db.flush()
+    else:
+        if (
+            chat_display_name is not None
+            and chat.chat_display_name != chat_display_name
+        ):
+            chat.chat_display_name = chat_display_name
+            db.add(chat)
+    return chat

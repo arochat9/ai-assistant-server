@@ -1,5 +1,4 @@
 import uuid
-import pytest
 
 from fastapi import status
 
@@ -8,12 +7,12 @@ from app.models.message import MessageStatus
 
 class TestMessageRoutes:
     """Integration tests for message routes"""
-    
+
     def test_messages_endpoint_exists(self, client):
         """Test that the messages endpoint is accessible"""
         response = client.options("/api/v1/messages/")
         assert response.status_code != 404, "Messages endpoint should exist"
-        
+
         # Also test that the health endpoint works
         response = client.get("/health")
         assert response.status_code == 200
@@ -28,7 +27,7 @@ class TestMessageRoutes:
             "text_content": "Test message content",
             "user_id": "test-user-id",
             "chat_id": "test-chat-id",
-            "user_info_struct": {"test": "data"},
+            "chat_members_struct": {"test": "data"},
             "is_spam": False,
         }
 
