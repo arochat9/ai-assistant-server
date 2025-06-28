@@ -257,6 +257,11 @@ Docker
 - to terminate: docker compose down
 - docker compose currently starts the server, and runs any migrations
 
+pytest
+
+- just type pytest and tests will run
+- they use conftest to connect to database etc
+
 project layout
 
 - routes for API endpoints
@@ -275,10 +280,10 @@ project layout
 TODO
 
 - the endpoint is working but need to validate that its working
-  - message in new chat (direct and group)
-  - message in existing chat but new chat names
-  - message in existing chat buit new users
-  - message with new users
+  - direct message in new chat (and new users)
+  - group message in new chat (and new users)
+  - message in existing chat but update chat name
+  - message in existing chat but new users
   - message with existing users but new names
   - look through the db schema and make sure all types are correct and such
 - stress test test create message endpoint with curl
