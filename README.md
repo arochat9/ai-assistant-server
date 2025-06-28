@@ -260,6 +260,8 @@ Docker
 pytest
 
 - just type pytest and tests will run
+- "docker compose --profile test run --rm test"
+  - rebuild deps with docker compose build test
 - they use conftest to connect to database etc
 
 project layout

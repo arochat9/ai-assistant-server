@@ -12,6 +12,19 @@ services:
     depends_on:
       - migrate
 
+  test:
+    build: .
+    container_name: ai-assistant-test
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    command: python -m pytest
+    profiles:
+      - test
+    depends_on:
+      - migrate
+
   migrate:
     build: .
     container_name: ai-assistant-migrate
@@ -21,4 +34,3 @@ services:
       - .:/app
     command: alembic upgrade head
     restart: "no"
-
