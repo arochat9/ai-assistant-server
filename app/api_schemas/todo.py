@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from app.models.todo import TaskOrEvent, TaskStatus, TaskType
 
@@ -33,6 +33,8 @@ class TaskUpdate(BaseModel):
 
 
 class TaskResponse(TaskBase):
+    model_config = ConfigDict(from_attributes=True)
+
     task_id: UUID
     status: TaskStatus
     task_type: Optional[TaskType] = None
@@ -44,6 +46,3 @@ class TaskResponse(TaskBase):
     created_by_agent: bool
     created_at: datetime
     updated_at: Optional[datetime] = None
-
-    class Config:
-        from_attributes = True

@@ -1,12 +1,14 @@
 from datetime import datetime
 from typing import List, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 from app.models.message import MessageStatus
 
 
 class ChatMember(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
     user_id: str
     name: Optional[str] = None
     is_sender: bool
@@ -26,13 +28,14 @@ class MessageCreate(MessageBase):
 
 
 class MessageResponse(MessageBase):
+    model_config = ConfigDict(from_attributes=True)
+
     message_id: str
     status: MessageStatus
+    user_id: str  # Sender ID
+    sender_name: Optional[str] = None  # Sender name
     chat_members_struct: List[ChatMember]
     is_spam: bool
     replied_to_fk: Optional[str] = None
     text_character_count: int
     time_received: datetime
-
-    class Config:
-        from_attributes = True

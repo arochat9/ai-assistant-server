@@ -274,8 +274,6 @@ project layout
 
 TODO
 
-- fix pydantic classes, getting this warning currently
-  - This means somewhere in your codebase (likely in your Pydantic models), you're using the old Pydantic v1 style configuration. You should update your models to use ConfigDict instead of class-based config. This is a non-critical warning but should be fixed eventually.
 - the endpoint is working but need to validate that its working
   - message in new chat (direct and group)
   - message in existing chat but new chat names

@@ -20,7 +20,9 @@ class MockDebounceService:
 async def db_session():
     """Test database session with transaction rollback"""
     engine = create_async_engine(
-        settings.ASYNC_DATABASE_URL, pool_size=1, max_overflow=0
+        settings.ASYNC_DATABASE_URL,
+        pool_size=10,  # Increased for parallel tests
+        max_overflow=20,
     )
     SessionLocal = async_sessionmaker(engine, expire_on_commit=False)
 
@@ -45,13 +47,16 @@ async def async_client(db_session):
     async def health():
         return {"status": "healthy"}
 
+    # Create a mock debounce service instance for this test
+    mock_debounce = MockDebounceService()
+
     app.dependency_overrides[get_db] = lambda: db_session
 
-    # Mock debounce service to prevent background threads
+    # Mock debounce service at the app level instead of module level
     import app.api.routes.messages as msg_module
 
     original = msg_module.debounce_service
-    msg_module.debounce_service = MockDebounceService()
+    msg_module.debounce_service = mock_debounce
 
     try:
         transport = ASGITransport(app=app)

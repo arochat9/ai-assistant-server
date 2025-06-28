@@ -7,3 +7,11 @@ known-first-party = ["app"]
 
 [tool.pyright]
 typeCheckingMode = "basic"
+
+[tool.pytest.ini_options]
+# Run tests in parallel by default
+addopts = "-n auto --tb=short"
+# Only run parallel for integration tests, not unit tests
+testpaths = ["tests"]
+# Asyncio configuration
+asyncio_mode = "auto"

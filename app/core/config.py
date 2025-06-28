@@ -3,7 +3,7 @@ from typing import Optional
 from urllib.parse import urlparse
 
 from dotenv import dotenv_values, load_dotenv
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 config = dotenv_values(".env")  # returns dict of key-value pairs
 # Load environment variables from .env file
@@ -11,6 +11,8 @@ load_dotenv()
 
 
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=".env")
+
     # App settings
     APP_NAME: str = "AI Assistant Server"
     VERSION: str = "1.0.0"
@@ -33,9 +35,6 @@ class Settings(BaseSettings):
     # APM settings
     ENABLE_APM: bool = True
     APM_SERVICE_NAME: str = "ai-assistant-server"
-
-    class Config:
-        env_file = ".env"
 
     @property
     def ASYNC_DATABASE_URL(self) -> str:
