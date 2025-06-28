@@ -2,6 +2,8 @@ import structlog
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload
 
 from app.api_schemas.message import MessageCreate, MessageResponse
 from app.core.database import get_db
@@ -105,18 +107,14 @@ async def create_message(
 
 
 async def get_or_create_users(db: AsyncSession, chat_members_struct):
-    user_ids = [member.user_id for member in chat_members_struct]
     users = {}
     for member in chat_members_struct:
         user = await db.get(User, member.user_id)
         if not user:
             user = User(user_id=member.user_id, name=member.name)
-            db.add(user)
-            await db.flush()
-        else:
-            if user.name != member.name:
-                user.name = member.name
-                db.add(user)
+        elif user.name != member.name:
+            user.name = member.name
+        db.add(user)
         users[member.user_id] = user
     return users
 
@@ -124,7 +122,12 @@ async def get_or_create_users(db: AsyncSession, chat_members_struct):
 async def get_or_create_chat(
     db: AsyncSession, chat_id, chat_display_name, chat_type, users
 ):
-    chat = await db.get(Chat, chat_id)
+    # Fetch chat with users relationship loaded
+    result = await db.execute(
+        select(Chat).options(selectinload(Chat.users)).where(Chat.chat_id == chat_id)
+    )
+    chat = result.scalars().first()
+    # If chat does not exist, create a new one
     if not chat:
         chat = Chat(
             chat_id=chat_id,
@@ -132,13 +135,17 @@ async def get_or_create_chat(
             chat_type=chat_type,
             users=list(users.values()),
         )
-        db.add(chat)
-        await db.flush()
     else:
+        # Update chat name if it has changed
         if (
             chat_display_name is not None
             and chat.chat_display_name != chat_display_name
         ):
             chat.chat_display_name = chat_display_name
-            db.add(chat)
+        # Add new users to the chat if they are not already present
+        existing_user_ids = {user.user_id for user in chat.users}
+        for user in users.values():
+            if user.user_id not in existing_user_ids:
+                chat.users.append(user)
+    db.add(chat)
     return chat

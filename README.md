@@ -255,6 +255,7 @@ Docker
 - to rebuild dependencies and run: docker compose up --build
 - to run without rebuild deps: docker compose up
 - to terminate: docker compose down
+- docker compose currently starts the server, and runs any migrations
 
 project layout
 
@@ -273,21 +274,20 @@ project layout
 
 TODO
 
-- fix the columns in the neon table that look like:
-  - chat_id_chat_users_chat_id
+- fix pydantic classes, getting this warning currently
+  - This means somewhere in your codebase (likely in your Pydantic models), you're using the old Pydantic v1 style configuration. You should update your models to use ConfigDict instead of class-based config. This is a non-critical warning but should be fixed eventually.
 - the endpoint is working but need to validate that its working
   - message in new chat (direct and group)
   - message in existing chat but new chat names
+  - message in existing chat buit new users
   - message with new users
   - message with existing users but new names
-- I need to make the messages endpoint add to chat and user, and not just the messages table, which is what is currently happening
-  - look through schema and make sure all types are correct and such
-- test create message endpoint with curl
+  - look through the db schema and make sure all types are correct and such
+- stress test test create message endpoint with curl
+- get integration tests working
 - deploy to github
 - get working on render
 - get alembic to work in render or wherever I deploy. the migration needs to work with the prod db
-- Connect neon database (go back to original chat for this)
-  - ideally use sqlalchemy. Also want to figure out writing to dev branch in neon vs prod branch when running locally
 - make sure agent logging is capturing everything (another table for this)
 - For logging in middleware, figure out what prometheus is doing... looks a bit sketchy
   - honestly need to figure out how logging everywhere works, right now its pretty confusing. theres a lot of logging words in main.py
@@ -300,6 +300,6 @@ TODO
 - look into why I have to create these weird global services in main.py. Why do I need to instantiate these classes
 - figure out how to setup ruff and language server stuff on a new machine and add to readme setup
 
-```
+Long term TODO
 
-```
+- add better types to todo task/event type enum

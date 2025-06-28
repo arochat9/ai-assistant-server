@@ -1,13 +1,62 @@
-import pytest
-from fastapi.testclient import TestClient
+import pytest_asyncio
+from fastapi import FastAPI
+from httpx import ASGITransport, AsyncClient
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
-from app.main import app
+from app.api.routes import messages, todos
+from app.core.config import settings
+from app.core.database import get_db
 
 
-@pytest.fixture(scope="function")
-def client():
-    """Create a test client that uses the actual database configuration"""
-    with TestClient(app, headers={}, cookies={}) as test_client:
-        yield test_client
-    # """Create a test client with minimal setup"""
-    # return TestClient(app)
+class MockDebounceService:
+    def start_or_reset_timer(self):
+        pass
+
+    def shutdown(self):
+        pass
+
+
+@pytest_asyncio.fixture
+async def db_session():
+    """Test database session with transaction rollback"""
+    engine = create_async_engine(
+        settings.ASYNC_DATABASE_URL, pool_size=1, max_overflow=0
+    )
+    SessionLocal = async_sessionmaker(engine, expire_on_commit=False)
+
+    async with SessionLocal() as session:
+        transaction = await session.begin()
+        try:
+            yield session
+        finally:
+            if transaction.is_active:
+                await transaction.rollback()
+            await engine.dispose()
+
+
+@pytest_asyncio.fixture
+async def async_client(db_session):
+    """Async test client with mocked services"""
+    app = FastAPI(title="Test App")
+    app.include_router(messages.router, prefix="/api/v1")
+    app.include_router(todos.router, prefix="/api/v1")
+
+    @app.get("/health")
+    async def health():
+        return {"status": "healthy"}
+
+    app.dependency_overrides[get_db] = lambda: db_session
+
+    # Mock debounce service to prevent background threads
+    import app.api.routes.messages as msg_module
+
+    original = msg_module.debounce_service
+    msg_module.debounce_service = MockDebounceService()
+
+    try:
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            yield client
+    finally:
+        msg_module.debounce_service = original
+        app.dependency_overrides.clear()

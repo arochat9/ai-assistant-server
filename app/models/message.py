@@ -53,3 +53,9 @@ class Message(Base):
     user = relationship("User", back_populates="messages")
     chat = relationship("Chat", back_populates="messages")
     replied_to = relationship("Message", remote_side=[message_id], backref="replies")
+    tasks = relationship(
+        "Task",
+        secondary="task_message_association",
+        back_populates="messages",
+        lazy="dynamic",
+    )
