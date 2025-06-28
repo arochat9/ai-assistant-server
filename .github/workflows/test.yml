@@ -13,5 +13,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Create .env file for testing
+        run: |
+          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" > .env
+          echo "ENVIRONMENT=test" >> .env
+
       - name: Run tests with Docker Compose
         run: docker compose up --build --abort-on-container-exit test
