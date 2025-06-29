@@ -2,7 +2,7 @@ import asyncio
 
 import pytest
 
-from tests.test_utils import post_message
+from tests.integration.integration_utils import post_message
 
 
 class TestDebounceService:

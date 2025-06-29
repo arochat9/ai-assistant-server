@@ -7,7 +7,7 @@ from sqlalchemy.future import select
 from app.models import Chat, User
 from app.models.chat import ChatType
 from app.models.message import MessageStatus
-from tests.test_utils import post_message_with_data
+from tests.integration.integration_utils import post_message_with_data
 
 
 class TestMessageRoutes:
