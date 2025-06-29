@@ -107,15 +107,21 @@ async def create_message(
 
 
 async def get_or_create_users(db: AsyncSession, chat_members_struct):
+    user_ids = {member.user_id for member in chat_members_struct}
+    existing_users = await db.execute(select(User).where(User.user_id.in_(user_ids)))
+    existing_user_dict = {user.user_id: user for user in existing_users.scalars()}
+
     users = {}
     for member in chat_members_struct:
-        user = await db.get(User, member.user_id)
-        if not user:
-            user = User(user_id=member.user_id, name=member.name)
-        elif user.name != member.name:
+        user = existing_user_dict.get(
+            member.user_id, User(user_id=member.user_id, name=member.name)
+        )
+        # Update name if it changed
+        if user.user_id in existing_user_dict and user.name != member.name:
             user.name = member.name
         db.add(user)
         users[member.user_id] = user
+
     return users
 
 
