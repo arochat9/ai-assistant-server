@@ -19,4 +19,4 @@ jobs:
           echo "ENVIRONMENT=test" >> .env
 
       - name: Run tests with Docker Compose
-        run: docker compose up --build --abort-on-container-exit test
+        run: docker compose build test && docker compose run --rm test
