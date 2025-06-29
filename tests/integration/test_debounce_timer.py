@@ -10,7 +10,7 @@ class TestDebounceService:
 
     @pytest.mark.asyncio
     async def test_timer_starts_on_message(self, async_client_with_debounce):
-        """Test that timer starts when message is created"""
+        """Test that timer starts when message is created and fires after delay"""
         client, debounce_service = async_client_with_debounce
 
         await post_message(client)
@@ -18,6 +18,15 @@ class TestDebounceService:
         # Timer should be active
         assert debounce_service.debounce_timer is not None
         assert debounce_service.debounce_timer.is_alive()
+
+        # Wait for timer to fire and see "Starting agentic process"
+        await asyncio.sleep(1.2)  # Wait slightly longer than 1 second timer
+
+        # Verify timer has completed/terminated
+        assert (
+            debounce_service.debounce_timer is None
+            or not debounce_service.debounce_timer.is_alive()
+        )
 
     @pytest.mark.asyncio
     async def test_timer_resets_on_new_message(self, async_client_with_debounce):
