@@ -16,7 +16,6 @@ jobs:
       - name: Create .env file for testing
         run: |
           echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" > .env
-          echo "ENVIRONMENT=test" >> .env
 
       - name: Run tests with Docker Compose
         run: docker compose build test && docker compose run --rm test
