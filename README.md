@@ -281,15 +281,6 @@ project layout
 
 TODO
 
-- the endpoint is working but need to validate that its working
-  - direct message in new chat (and new users)
-  - group message in new chat (and new users)
-  - message in existing chat but update chat name
-  - message in existing chat but new users
-  - message with existing users but new names
-  - look through the db schema and make sure all types are correct and such
-- stress test test create message endpoint with curl
-- get integration tests working
 - deploy to github
 - get working on render
 - get alembic to work in render or wherever I deploy. the migration needs to work with the prod db
