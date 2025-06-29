@@ -286,9 +286,6 @@ project layout
 
 TODO
 
-- deploy to github
-- get working on render
-- get alembic to work in render or wherever I deploy. the migration needs to work with the prod db
 - make sure agent logging is capturing everything (another table for this)
 - For logging in middleware, figure out what prometheus is doing... looks a bit sketchy
   - honestly need to figure out how logging everywhere works, right now its pretty confusing. theres a lot of logging words in main.py
