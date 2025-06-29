@@ -81,6 +81,8 @@ async def create_message(
             text_length=text_character_count,
         )
 
+        print("message created successfully", message.message_id)
+
         return message
 
     except IntegrityError as e:

@@ -13,27 +13,31 @@ logger = structlog.get_logger()
 class DebounceService:
     """Service to handle debounced agent processing"""
 
-    def __init__(self):
+    def __init__(self, debounce_seconds: Optional[float] = None):
         self.debounce_timer: Optional[threading.Timer] = None
         self.debounce_lock = threading.Lock()
         self.agent_running = False
         self.run_again = False
         self.agent_service = AgentService()
+        self.debounce_seconds = debounce_seconds or settings.DEBOUNCE_SECONDS
 
     def start_or_reset_timer(self):
         """Start or reset the debounce timer"""
+        # Skip timer if debounce_seconds is negative (test mode)
+        if self.debounce_seconds < 0:
+            logger.debug("Debounce disabled (negative seconds), skipping timer")
+            return
+
         with self.debounce_lock:
             if self.debounce_timer:
                 self.debounce_timer.cancel()
                 logger.debug("Cancelled existing debounce timer")
 
             self.debounce_timer = threading.Timer(
-                settings.DEBOUNCE_SECONDS, self._try_run_agentic_process
+                self.debounce_seconds, self._try_run_agentic_process
             )
             self.debounce_timer.start()
-            logger.info(
-                f"Started debounce timer for {settings.DEBOUNCE_SECONDS} seconds"
-            )
+            logger.info(f"Started debounce timer for {self.debounce_seconds} seconds")
 
     def _try_run_agentic_process(self):
         """Try to run the agentic process, respecting concurrency limits"""

@@ -7,6 +7,7 @@ from sqlalchemy.future import select
 from app.models import Chat, User
 from app.models.chat import ChatType
 from app.models.message import MessageStatus
+from tests.test_utils import post_message_with_data
 
 
 class TestMessageRoutes:
@@ -16,43 +17,6 @@ class TestMessageRoutes:
     def unique_id(prefix="test"):
         """Generate a unique ID for tests"""
         return f"{prefix}_{str(uuid.uuid4())[:8]}"
-
-    @staticmethod
-    def _create_message_data(
-        msg_id=None,
-        chat_id=None,
-        chat_name="Test Chat",
-        members=None,
-        text="Test message",
-        **kwargs,
-    ):
-        """DRY helper to create message data with unique IDs"""
-        if chat_id is None:
-            chat_id = TestMessageRoutes.unique_id("chat")
-
-        if members is None:
-            members = [
-                {
-                    "user_id": TestMessageRoutes.unique_id("user"),
-                    "name": "User One",
-                    "is_sender": True,
-                }
-            ]
-
-        return {
-            "message_id": msg_id or str(uuid.uuid4()),
-            "text_content": text,
-            "chat_id": chat_id,
-            "chat_display_name": chat_name,
-            "chat_members_struct": members,
-            **kwargs,
-        }
-
-    @staticmethod
-    async def _post_message(client, **kwargs):
-        """DRY helper to post message and return response"""
-        data = TestMessageRoutes._create_message_data(**kwargs)
-        return await client.post("/api/v1/messages/", json=data), data
 
     @staticmethod
     async def _get_user_from_db(db_session, user_id):
@@ -116,7 +80,7 @@ class TestMessageRoutes:
     @pytest.mark.asyncio
     async def test_create_message(self, async_client):
         """Test successful message creation"""
-        response, data = await self._post_message(async_client)
+        response, data = await post_message_with_data(async_client)
 
         assert response.status_code == status.HTTP_201_CREATED
         result = response.json()
@@ -136,29 +100,29 @@ class TestMessageRoutes:
         msg_id = str(uuid.uuid4())
 
         # First message succeeds
-        response, _ = await self._post_message(async_client, msg_id=msg_id)
+        response, _ = await post_message_with_data(async_client, message_id=msg_id)
         assert response.status_code == status.HTTP_201_CREATED
 
         # Duplicate fails
-        response, _ = await self._post_message(async_client, msg_id=msg_id)
+        response, _ = await post_message_with_data(async_client, message_id=msg_id)
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "Database error" in response.json()["detail"]
 
     @pytest.mark.asyncio
     async def test_message_with_minimal_data(self, async_client):
         """Test message creation with only required fields"""
-        response, _ = await self._post_message(async_client, chat_name=None)
+        response, _ = await post_message_with_data(async_client, chat_name=None)
         assert response.status_code == status.HTTP_201_CREATED
 
     @pytest.mark.asyncio
     async def test_message_reply_functionality(self, async_client):
         """Test message reply functionality using replied_to_fk"""
         # Create original
-        original_response, original_data = await self._post_message(async_client)
+        original_response, original_data = await post_message_with_data(async_client)
         assert original_response.status_code == status.HTTP_201_CREATED
 
         # Create reply
-        reply_response, _ = await self._post_message(
+        reply_response, _ = await post_message_with_data(
             async_client, replied_to_fk=original_data["message_id"]
         )
         assert reply_response.status_code == status.HTTP_201_CREATED
@@ -175,7 +139,7 @@ class TestMessageRoutes:
             {"user_id": user1_id, "name": "Alice", "is_sender": True},
             {"user_id": user2_id, "name": "Bob", "is_sender": False},
         ]
-        response, data = await self._post_message(
+        response, data = await post_message_with_data(
             async_client,
             chat_id=chat_id,
             chat_name="Alice & Bob",
@@ -211,7 +175,7 @@ class TestMessageRoutes:
             {"user_id": user2_id, "name": "Bob", "is_sender": False},
             {"user_id": user3_id, "name": "Charlie", "is_sender": False},
         ]
-        response, _ = await self._post_message(
+        response, _ = await post_message_with_data(
             async_client,
             chat_id=chat_id,
             chat_name="Team Chat",
@@ -237,13 +201,15 @@ class TestMessageRoutes:
         chat_id = self.unique_id("rename_chat")
 
         # Create first message
-        await self._post_message(async_client, chat_id=chat_id, chat_name="Old Name")
+        await post_message_with_data(
+            async_client, chat_id=chat_id, chat_name="Old Name"
+        )
 
         # Verify initial chat state
         await self._verify_chat_created(db_session, chat_id, expected_name="Old Name")
 
         # Send message with new name
-        response, _ = await self._post_message(
+        response, _ = await post_message_with_data(
             async_client, chat_id=chat_id, chat_name="New Name"
         )
         assert response.status_code == status.HTTP_201_CREATED
@@ -262,7 +228,9 @@ class TestMessageRoutes:
         initial_members = [
             {"user_id": existing_user_id, "name": "Existing User", "is_sender": True}
         ]
-        await self._post_message(async_client, chat_id=chat_id, members=initial_members)
+        await post_message_with_data(
+            async_client, chat_id=chat_id, members=initial_members
+        )
 
         # Verify initial state
         await self._verify_users_created(db_session, initial_members)
@@ -273,7 +241,7 @@ class TestMessageRoutes:
             {"user_id": existing_user_id, "name": "Existing User", "is_sender": False},
             {"user_id": new_user_id, "name": "New User", "is_sender": True},
         ]
-        response, _ = await self._post_message(
+        response, _ = await post_message_with_data(
             async_client, chat_id=chat_id, members=new_members
         )
         assert response.status_code == status.HTTP_201_CREATED
@@ -290,14 +258,16 @@ class TestMessageRoutes:
 
         # Create message with original name
         original_members = [{"user_id": user_id, "name": "Old Name", "is_sender": True}]
-        await self._post_message(async_client, members=original_members)
+        await post_message_with_data(async_client, members=original_members)
 
         # Verify initial user state
         await self._verify_users_created(db_session, original_members)
 
         # Send message with updated name
         updated_members = [{"user_id": user_id, "name": "New Name", "is_sender": True}]
-        response, _ = await self._post_message(async_client, members=updated_members)
+        response, _ = await post_message_with_data(
+            async_client, members=updated_members
+        )
 
         assert response.status_code == status.HTTP_201_CREATED
         assert response.json()["sender_name"] == "New Name"
