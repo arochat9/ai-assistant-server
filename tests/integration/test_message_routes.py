@@ -120,7 +120,8 @@ class TestMessageRoutes:
 
         assert response.status_code == status.HTTP_201_CREATED
         result = response.json()
-        assert result["message_id"] == data["message_id"]
+        # assert result["message_id"] == data["message_id"]
+        assert result["message_id"] == "fail here"
         assert result["text_content"] == data["text_content"]
         assert result["chat_id"] == data["chat_id"]
         assert result["status"] == MessageStatus.UNPROCESSED.value
