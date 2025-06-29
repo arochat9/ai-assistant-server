@@ -6,14 +6,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from app.api.routes import messages, todos
 from app.core.config import settings
 from app.core.database import get_db
-
-
-class MockDebounceService:
-    def start_or_reset_timer(self):
-        pass
-
-    def shutdown(self):
-        pass
+from app.services.debounce_service import DebounceService
 
 
 @pytest_asyncio.fixture
@@ -47,8 +40,8 @@ async def async_client(db_session):
     async def health():
         return {"status": "healthy"}
 
-    # Create a mock debounce service instance for this test
-    mock_debounce = MockDebounceService()
+    # Create debounce service with disabled timer
+    disabled_debounce = DebounceService(debounce_seconds=-1)
 
     app.dependency_overrides[get_db] = lambda: db_session
 
@@ -56,12 +49,39 @@ async def async_client(db_session):
     import app.api.routes.messages as msg_module
 
     original = msg_module.debounce_service
-    msg_module.debounce_service = mock_debounce
+    msg_module.debounce_service = disabled_debounce
 
     try:
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             yield client
     finally:
+        disabled_debounce.shutdown()
+        msg_module.debounce_service = original
+        app.dependency_overrides.clear()
+
+
+@pytest_asyncio.fixture
+async def async_client_with_debounce(db_session):
+    """Test client with enabled debounce for timer testing"""
+    app = FastAPI(title="Test App")
+    app.include_router(messages.router, prefix="/api/v1")
+    app.include_router(todos.router, prefix="/api/v1")
+
+    enabled_debounce = DebounceService(debounce_seconds=1)
+
+    app.dependency_overrides[get_db] = lambda: db_session
+
+    import app.api.routes.messages as msg_module
+
+    original = msg_module.debounce_service
+    msg_module.debounce_service = enabled_debounce
+
+    try:
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            yield client, enabled_debounce
+    finally:
+        enabled_debounce.shutdown()
         msg_module.debounce_service = original
         app.dependency_overrides.clear()

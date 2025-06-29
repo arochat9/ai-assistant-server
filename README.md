@@ -259,7 +259,12 @@ Docker
 
 pytest
 
-- just type pytest and tests will run
+- just type "pytest" and tests will run
+- to run a single test
+  - do this: pytest -k test_create_message
+  - to run test with print statements: pytest -s -k test_create_message -n 0
+    - replace "test_create_message" with the message to test
+  - to run test and see logger output: pytest -s -k test_create_message -n 0 --log-cli-level=INFO
 - "docker compose --profile test run --rm test"
   - rebuild deps with docker compose build test
 - they use conftest to connect to database etc
