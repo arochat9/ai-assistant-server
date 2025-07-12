@@ -73,7 +73,7 @@ async def create_message(
         await db.refresh(message)
 
         # Trigger debounced agent processing
-        debounce_service.start_or_reset_timer()
+        debounce_service.start_or_reset_timer(message_data.message_id)
 
         logger.info(
             "Message created successfully",
