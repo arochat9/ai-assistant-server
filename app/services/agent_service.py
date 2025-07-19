@@ -1,5 +1,4 @@
 import asyncio
-import threading
 from typing import Optional
 
 import structlog
@@ -16,36 +15,7 @@ class AgentService:
     """Service for batch processing of messages ready for agent"""
 
     def __init__(self, test_processing_time: Optional[float] = None):
-        self.agent_lock = threading.Lock()
-        self.agent_running = False
-        self.pending_retry = False
         self.test_processing_time = test_processing_time
-
-    def process_ready_messages(self):
-        """Process all messages ready for agent (batch processing)"""
-        with self.agent_lock:
-            if self.agent_running:
-                self.pending_retry = True
-                logger.info("Agent already running, will retry after completion")
-                return
-            self.agent_running = True
-
-        try:
-            # Process messages in a loop to handle retries
-            while True:
-                self.pending_retry = False
-                asyncio.run(self.process_batch())
-
-                # Check if we need to retry
-                with self.agent_lock:
-                    if not self.pending_retry:
-                        break
-                    logger.info("Processing retry batch")
-
-        except Exception as e:
-            logger.error("Error in agent processing", error=str(e))
-        finally:
-            self.agent_running = False
 
     async def process_batch(self):
         """Process batch of ready messages"""
