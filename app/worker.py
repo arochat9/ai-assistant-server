@@ -2,6 +2,7 @@
 import asyncio
 import os
 from datetime import datetime, timedelta
+from typing import Optional
 
 from sqlalchemy.future import select
 
@@ -12,13 +13,15 @@ from app.services.agent_service import AgentService
 from app.services.message_processor import MessageProcessor
 
 
-async def worker_loop():
+async def worker_loop(
+    test_worker: bool = False, override_debounce_seconds: Optional[int] = None
+):
     # Exit early during testing
-    if os.getenv("PYTEST_RUNNING"):
+    if os.getenv("PYTEST_RUNNING") and not test_worker:
         return
 
-    processor = MessageProcessor(test_processing_time=2)  # 2 sec test
-    agent = AgentService(test_processing_time=5)  # 5 sec test
+    processor = MessageProcessor(test_processing_time=0.2)
+    agent = AgentService(test_processing_time=0.2)
 
     while True:
         async with AsyncSessionLocal() as db:
@@ -30,12 +33,17 @@ async def worker_loop():
                 await processor.process_message(str(message.message_id))
 
             # Run agent on ready messages if no recent activity
-            cutoff = datetime.utcnow() - timedelta(seconds=settings.DEBOUNCE_SECONDS)
+            cutoff = datetime.now() - timedelta(
+                seconds=override_debounce_seconds or settings.DEBOUNCE_SECONDS
+            )
             recent_messages = await db.execute(
-                select(Message).where(Message.created_at > cutoff)
+                select(Message).where(Message.time_received > cutoff)
             )
             if not recent_messages.scalars().first():
                 await agent.process_batch()
+
+        if test_worker:
+            break
 
         await asyncio.sleep(5)
 

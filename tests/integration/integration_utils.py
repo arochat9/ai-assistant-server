@@ -2,6 +2,10 @@
 
 import uuid
 
+from sqlalchemy.future import select
+
+from app.models.message import Message
+
 
 def create_message_data(
     text="Test message",
@@ -38,3 +42,12 @@ async def post_message_with_data(client, **kwargs):
     data = create_message_data(**kwargs)
     response = await client.post("/api/v1/messages/", json=data)
     return response, data
+
+
+async def post_and_get_message(client, db_session, **kwargs):
+    """Post a test message and return the DB model instance."""
+    response, data = await post_message_with_data(client, **kwargs)
+    result = await db_session.execute(
+        select(Message).where(Message.message_id == data["message_id"])
+    )
+    return result.scalars().first()
