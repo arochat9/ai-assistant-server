@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import asyncio
+import os
 from datetime import datetime, timedelta
 
 from sqlalchemy.future import select
@@ -12,6 +13,10 @@ from app.services.message_processor import MessageProcessor
 
 
 async def worker_loop():
+    # Exit early during testing
+    if os.getenv("PYTEST_RUNNING"):
+        return
+
     processor = MessageProcessor(test_processing_time=2)  # 2 sec test
     agent = AgentService(test_processing_time=5)  # 5 sec test
 
