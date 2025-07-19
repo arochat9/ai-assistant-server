@@ -15,12 +15,19 @@ logger = structlog.get_logger()
 class DebounceService:
     """Service to handle debounced agent processing"""
 
-    def __init__(self, debounce_seconds: Optional[float] = None):
+    def __init__(
+        self,
+        debounce_seconds: Optional[float] = None,
+        test_processing_time: Optional[float] = None,
+        test_agent_time: Optional[float] = None,
+    ):
         self.debounce_timer: Optional[threading.Timer] = None
         self.lock = threading.Lock()
         self.shutdown_requested = False
-        self.agent_service = AgentService()
-        self.message_processor = MessageProcessor()
+        self.agent_service = AgentService(test_processing_time=test_agent_time)
+        self.message_processor = MessageProcessor(
+            test_processing_time=test_processing_time
+        )
         self.debounce_seconds = debounce_seconds or settings.DEBOUNCE_SECONDS
         self.processing_messages = set()  # Track messages being processed
 

@@ -1,4 +1,5 @@
 import asyncio
+from typing import Optional
 
 import structlog
 from sqlalchemy import update
@@ -12,15 +13,21 @@ logger = structlog.get_logger()
 class MessageProcessor:
     """Service for processing individual messages"""
 
+    def __init__(self, test_processing_time: Optional[float] = None):
+        self.test_processing_time = test_processing_time
+
     async def process_message(self, message_id: str):
         """Process a single message and mark it as ready for agent"""
         logger.info("Processing message", message_id=message_id)
 
         async with AsyncSessionLocal() as db:
-            # TODO: Implement actual message processing logic here
-            # This is where you would do NLP, entity extraction, etc.
-            # Simulate processing time
-            await asyncio.sleep(1)
+            if self.test_processing_time is not None:
+                # Test mode - just sleep for the specified time
+                await asyncio.sleep(self.test_processing_time)
+            else:
+                # TODO: Implement actual message processing logic here
+                # This is where you would do NLP, entity extraction, etc.
+                pass
 
             # Mark as ready for agent
             await db.execute(

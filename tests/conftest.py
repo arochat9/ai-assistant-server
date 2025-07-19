@@ -41,7 +41,11 @@ async def async_client(db_session):
         return {"status": "healthy"}
 
     # Create debounce service with disabled timer
-    disabled_debounce = DebounceService(debounce_seconds=-1)
+    disabled_debounce = DebounceService(
+        debounce_seconds=-1,
+        test_processing_time=0.1,  # Fast test processing
+        test_agent_time=0.1,  # Fast test agent processing
+    )
 
     app.dependency_overrides[get_db] = lambda: db_session
 
@@ -68,7 +72,11 @@ async def async_client_with_debounce(db_session):
     app.include_router(messages.router, prefix="/api/v1")
     app.include_router(todos.router, prefix="/api/v1")
 
-    enabled_debounce = DebounceService(debounce_seconds=1)
+    enabled_debounce = DebounceService(
+        debounce_seconds=1,
+        test_processing_time=0.1,  # Fast test processing
+        test_agent_time=0.1,  # Fast test agent processing
+    )
 
     app.dependency_overrides[get_db] = lambda: db_session
 

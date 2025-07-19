@@ -1,5 +1,6 @@
 import asyncio
 import threading
+from typing import Optional
 
 import structlog
 from sqlalchemy import update
@@ -14,10 +15,11 @@ logger = structlog.get_logger()
 class AgentService:
     """Service for batch processing of messages ready for agent"""
 
-    def __init__(self):
+    def __init__(self, test_processing_time: Optional[float] = None):
         self.agent_lock = threading.Lock()
         self.agent_running = False
         self.pending_retry = False
+        self.test_processing_time = test_processing_time
 
     def process_ready_messages(self):
         """Process all messages ready for agent (batch processing)"""
@@ -69,9 +71,13 @@ class AgentService:
             )
             await db.commit()
 
-            # TODO: Implement actual agent processing logic here
-            # This is where you would do task extraction, etc.
-            await asyncio.sleep(0.1)  # Simulate processing
+            if self.test_processing_time is not None:
+                # Test mode - just sleep for the specified time
+                await asyncio.sleep(self.test_processing_time)
+            else:
+                # TODO: Implement actual agent processing logic here
+                # This is where you would do task extraction, etc.
+                pass
 
             # Mark as processed
             await db.execute(
