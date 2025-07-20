@@ -24,9 +24,6 @@ class Settings(BaseSettings):
     if temp_db_url is None:
         raise ValueError("DATABASE_URL environment variable is not defined")
     DATABASE_URL: str = temp_db_url
-    # temp_parsed_url: ParseResult = urlparse(temp_db_url)
-    # ASYNC_DATABASE_URL: str = f"postgresql+asyncpg://{temp_parsed_url.username}:{temp_parsed_url.password}@{temp_parsed_url.hostname}{temp_parsed_url.path}?ssl=require"
-    # SYNC_DATABASE_URL: str = f"postgresql+psycopg2://{temp_parsed_url.username}:{temp_parsed_url.password}@{temp_parsed_url.hostname}{temp_parsed_url.path}?ssl=require"
 
     # Agent settings
     DEBOUNCE_SECONDS: int = 60

@@ -10,13 +10,9 @@ from app.core.database import get_db
 from app.models import Chat, Message, User
 from app.models.chat import ChatType
 from app.models.message import MessageStatus
-from app.services.debounce_service import DebounceService
 
 logger = structlog.get_logger()
 router = APIRouter(prefix="/messages", tags=["messages"])
-
-# Global debounce service instance
-debounce_service = DebounceService()
 
 
 @router.post("/", response_model=MessageResponse, status_code=status.HTTP_201_CREATED)
@@ -71,9 +67,6 @@ async def create_message(
         db.add(message)
         await db.commit()
         await db.refresh(message)
-
-        # Trigger debounced agent processing
-        debounce_service.start_or_reset_timer()
 
         logger.info(
             "Message created successfully",
