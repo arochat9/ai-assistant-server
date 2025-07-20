@@ -259,7 +259,7 @@ Docker
 
 pytest
 
-- just type "pytest" and tests will run (not parellel though)
+- just type "pytest" and tests will run (not parallel though)
   - to get parallel tests to run in parallel and sequential tests to run sequentially do this:
   - pytest -v -n auto
 - to run a single test
@@ -304,3 +304,4 @@ TODO
 Long term TODO
 
 - add better types to todo task/event type enum
+-
