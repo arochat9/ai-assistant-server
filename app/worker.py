@@ -14,17 +14,18 @@ from app.services.message_processor import MessageProcessor
 
 
 async def worker_loop(
-    test_worker: bool = False, override_debounce_seconds: Optional[int] = None
+    test_database_session=None, override_debounce_seconds: Optional[int] = None
 ):
     # Exit early during testing
-    if os.getenv("PYTEST_RUNNING") and not test_worker:
+    if os.getenv("PYTEST_RUNNING") and not test_database_session:
         return
 
     processor = MessageProcessor(test_processing_time=0.2)
     agent = AgentService(test_processing_time=0.2)
 
     while True:
-        async with AsyncSessionLocal() as db:
+
+        async def process_messages(db):
             # Process unprocessed messages
             unprocessed = await db.execute(
                 select(Message).where(Message.status == MessageStatus.UNPROCESSED)
@@ -42,7 +43,13 @@ async def worker_loop(
             if not recent_messages.scalars().first():
                 await agent.process_batch()
 
-        if test_worker:
+        if test_database_session:
+            await process_messages(test_database_session)
+        else:
+            async with AsyncSessionLocal() as db:
+                await process_messages(db)
+
+        if test_database_session:
             break
 
         await asyncio.sleep(5)
