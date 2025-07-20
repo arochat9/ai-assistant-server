@@ -8,6 +8,8 @@ from tests.integration.integration_utils import (
     post_and_get_message,
 )
 
+pytestmark = pytest.mark.serial
+
 
 @pytest.mark.asyncio
 async def test_worker_status_transitions(async_client, db_session):

@@ -19,7 +19,13 @@ services:
       - .env
     volumes:
       - .:/app
-    command: python -m pytest
+    command: >
+      sh -c "
+        echo 'Running parallel tests...' &&
+        python -m pytest -n auto -m 'not serial' &&
+        echo 'Running serial tests...' &&
+        python -m pytest -m serial
+      "
     profiles:
       - test
     depends_on:
