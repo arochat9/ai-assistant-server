@@ -31,7 +31,7 @@ async def worker_loop(
                 select(Message).where(Message.status == MessageStatus.UNPROCESSED)
             )
             for message in unprocessed.scalars():
-                await processor.process_message(str(message.message_id))
+                await processor.process_message(str(message.message_id), db)
 
             # Run agent on ready messages if no recent activity
             cutoff = datetime.now() - timedelta(
@@ -41,7 +41,7 @@ async def worker_loop(
                 select(Message).where(Message.time_received > cutoff)
             )
             if not recent_messages.scalars().first():
-                await agent.process_batch()
+                await agent.process_batch(db)
 
         if test_database_session:
             await process_messages(test_database_session)
