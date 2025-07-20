@@ -259,7 +259,9 @@ Docker
 
 pytest
 
-- just type "pytest" and tests will run
+- just type "pytest" and tests will run (not parellel though)
+  - to get parallel tests to run in parallel and sequential tests to run sequentially do this:
+  - pytest -v -n auto
 - to run a single test
   - do this: pytest -k test_create_message
   - to run test with print statements: pytest -s -k test_create_message -n 0
@@ -267,6 +269,7 @@ pytest
   - to run test and see logger output: pytest -s -k test_create_message -n 0 --log-cli-level=INFO
 - "docker compose --profile test run --rm test"
   - rebuild deps with docker compose build test
+  - to not rebuild and just run docker testing: "docker compose run --rm test"
 - they use conftest to connect to database etc
 
 project layout
