@@ -28,6 +28,10 @@ class Settings(BaseSettings):
     # Agent settings
     DEBOUNCE_SECONDS: int = 60
     MAX_CONCURRENT_AGENTS: int = 1
+    maybe_foundry_token: Optional[str] = os.getenv("FOUNDRY_6_MONTH_TOKEN")
+    if maybe_foundry_token is None:
+        raise ValueError("FOUNDRY_TOKEN environment variable is not defined")
+    FOUNDRY_6_MONTH_TOKEN: str = maybe_foundry_token
 
     # APM settings
     ENABLE_APM: bool = True
