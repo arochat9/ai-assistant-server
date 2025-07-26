@@ -1,8 +1,8 @@
-import os
-
 from ai_assistant_app_sdk import FoundryClient, UserTokenAuth
 
-auth = UserTokenAuth(token=os.environ["FOUNDRY_TOKEN"])
+from app.core.config import settings
+
+auth = UserTokenAuth(settings.FOUNDRY_6_MONTH_TOKEN)
 
 client = FoundryClient(auth=auth, hostname="https://magic.usw-3.palantirfoundry.com")
 
